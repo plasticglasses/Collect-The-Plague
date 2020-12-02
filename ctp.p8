@@ -2,7 +2,7 @@ pico-8 cartridge // http://www.pico-8.com
 version 29
 __lua__
 
-_griddata = {
+_griddata_old = {
 "                            ",
 " ............  ............ ",
 " .    .     .  .     .    . ",
@@ -35,6 +35,40 @@ _griddata = {
 " .......................... ",
 "                            "
 }
+
+_griddata = {
+  "                            ",
+  " ............  ............ ",
+  " .    .     .  .     .    . ",
+  " o    .     .  .     .    o ",
+  " .    .     .  .     .    . ",
+  " .......................... ",
+  " .    .  .        .  .    . ",
+  " .    .  .        .  .    . ",
+  " ......  ....  ....  ...... ",
+  "      .     -  -     .      ",
+  "      .     -  -     .      ",
+  "      .  ----------  .      ",
+  "      .  -        -  .      ",
+  "      .  -        -  .      ",
+  " -----.---        ---.----- ",
+  "      .  -        -  .      ",
+  "      .  -        -  .      ",
+  "      .  ----------  .      ",
+  "      .  -        -  .      ",
+  "      .  -        -  .      ",
+  " ............  ............ ",
+  " .    .     .  .     .    . ",
+  " .    .     .  .     .    . ",
+  " o..  .......--.......  ..o ",
+  "   .  .  .        .  .  .   ",
+  "   .  .  .        .  .  .   ",
+  " ......  ....  ....  ...... ",
+  " .          .  .          . ",
+  " .          .  .          . ",
+  " .......................... ",
+  "                            "
+  }
 
 _left=0
 _right=1
@@ -76,14 +110,19 @@ ghost.states = {
   dead=4,
   caged=5
 }
+ghost.types = {
+  virus=1,
+  antelope=2
+}
 
-function ghost.new( x, y, name, speed)
+function ghost.new( x, y, name, speed, type)
   local g = {}
   setmetatable( g, ghost)
   g.x        = x
   g.y        = y
   g._speed   = speed
   g.name     = name
+  g.type     = type
   g.dir      = _left
   g.ap       = 0
   g.freetime = 0 -- how long til release from cage
@@ -91,25 +130,40 @@ function ghost.new( x, y, name, speed)
   g.state    = ghost.states.chase
   g.sprite   = 3
   g.eyesspr  = 60
+
+  -- Select sprite depending on the type of ghost
+  if g.type == ghost.types.virus then
+    g.sprite = 3
+  elseif g.type == ghost.types.antelope then
+    g.sprite = 9
+  end
   
   if g.name=="blinky" then
     g.colour   = 8
-    g.state    = g.states.chase
+    g.state    = g.states.fright
   elseif g.name=="pinky" then
     g.colour   = 14
     g.state    = g.states.caged
-    g.freetime = 150
-    g.freefood = 30
+    g.freetime = 100
+    g.freefood = 10
   elseif g.name=="inky" then
     g.colour   = 12
     g.state    = g.states.caged
-    g.freetime = 300
-    g.freefood = 60
+    g.freetime = 200
+    g.freefood = 20
   elseif g.name=="clyde" then
     g.colour   = 9
     g.state    = g.states.caged
+    g.freetime = 300
+    g.freefood = 30
+  elseif g.name=="gigi" then
+    g.state    = g.states.caged
     g.freetime = 400
-    g.freefood = 90
+    g.freefood = 40
+  elseif g.name=="kiki" then
+    g.state    = g.states.caged
+    g.freetime = 500
+    g.freefood = 50
   end
   
   return g
@@ -145,7 +199,12 @@ function ghost:uncage()
     self.y     = 14*4-2
     self.dir   = _up
     self.ap    = 0
-    self.state = self.states.chase
+
+    if self.type == ghost.types.virus then
+      self.state = self.states.fright
+    elseif self.type == ghost.types.antelope then
+      self.state = self.states.chase
+    end
   end
 end
 
@@ -299,10 +358,15 @@ function resetactors()
     eatanimframe = 0
   }
   
-  add( ghosts, ghost.new( 14*4, 12*4-2, "blinky", 0.6))
-  add( ghosts, ghost.new( 12*4, 15*4-2, "pinky", 0.6))
-  add( ghosts, ghost.new( 14*4, 15*4-2, "inky", 0.6))
-  add( ghosts, ghost.new( 16*4, 15*4-2, "clyde", 0.6))
+  -- Viruses
+  add( ghosts, ghost.new( 14*4, 12*4-2, "blinky", 0.6, ghost.types.virus))
+  add( ghosts, ghost.new( 12*4, 15*4-2, "pinky", 0.6, ghost.types.virus))
+  add( ghosts, ghost.new( 14*4, 15*4-2, "inky", 0.6, ghost.types.virus))
+  add( ghosts, ghost.new( 16*4, 15*4-2, "clyde", 0.6, ghost.types.virus))
+
+  -- Antelopes
+  add( ghosts, ghost.new( 12*4, 15*4-2, "gigi", 0.6, ghost.types.antelope))
+  add( ghosts, ghost.new( 16*4, 15*4-2, "kiki", 0.6, ghost.types.antelope))
   
   newdir = pacman.dir
   game.playtime = 0
@@ -343,14 +407,15 @@ function _draw()
     return
   end
   
-  for d in all(pellets) do
-    if d.super then
-      rectfill(   d.x, d.y-1,   d.x, d.y+1, 10)
-      rectfill( d.x-1,   d.y, d.x+1,   d.y, 10)
-    else
-      rectfill( d.x, d.y, d.x, d.y, 7)
-    end
-  end
+  -- Hide pellets (for some reason removing them breaks the game)
+  -- for d in all(pellets) do
+  --   if d.super then
+  --     rectfill(   d.x, d.y-1,   d.x, d.y+1, 10)
+  --     rectfill( d.x-1,   d.y, d.x+1,   d.y, 10)
+  --   else
+  --     rectfill( d.x, d.y, d.x, d.y, 7)
+  --   end
+  -- end
   
   if game.state == states.playing then
     pacman.drawsprite = pacman.eatanim[pacman.eatanimframe+1]
@@ -369,10 +434,14 @@ function _draw()
   palt()
   
   for g in all(ghosts) do
-    pal( 3, g:get_colour())
-    spr( g.sprite + flr(game.playtime/4)%2, g.x-3, g.y-4)
-    pal()
-    spr( g.eyesspr+g.dir, g.x-3, g.y-3)
+    if g.type == ghost.types.virus then
+      pal( 3, g:get_colour())
+      spr( g.sprite + flr(game.playtime/4)%2, g.x-3, g.y-4)
+      pal()
+      spr( g.eyesspr+g.dir, g.x-3, g.y-3)
+    else
+      spr( g.sprite + flr(game.playtime/4)%2, g.x-3, g.y-4)
+    end
   end
 end
 
@@ -462,7 +531,7 @@ function move_pacman()
     end
     
     pacman.eatanimframe = (pacman.eatanimframe+1) % #pacman.eatanim
-    eatpellet(pacman.x, pacman.y)
+    --eatpellet(pacman.x, pacman.y)
   end
   
   if pacman.ap >= 1 then
@@ -519,7 +588,7 @@ function move_ghost( g)
     
     local tx, ty
     
-    if g.name=="blinky" then
+    if g.name=="blinky" or g.name=="gigi" then
       tx = pacman.x
       ty = pacman.y
     elseif g.name=="pinky" then
@@ -536,7 +605,7 @@ function move_ghost( g)
       end
       tx = tx - (ghosts[1].x-tx)
       ty = ty - (ghosts[1].y-ty)
-    elseif g.name=="clyde" then
+    elseif g.name=="clyde" or g.name=="kiki" then
       if distance( g.x, g.y, pacman.x, pacman.y)>32 then
         tx = pacman.x
         ty = pacman.y
@@ -640,8 +709,10 @@ function _update()
   g = collision()
   if( collision()) then
     if g.state == ghost.states.fright then
-      g.state  =  ghost.states.dead
-    elseif g.state ~= ghost.states.dead then
+      sfx(3+score%2)
+      del( ghosts, g)
+      score += 10
+    elseif g.state == ghost.states.chase then
       death()
       return
     end
@@ -659,7 +730,7 @@ function _update()
   for g in all(ghosts) do
     if g.state==g.states.caged then
       if g.freetime <= game.playtime or
-         g.freefood <= 244-#pellets then
+         g.freefood <= score then
         g:uncage()
       end
     else
@@ -670,14 +741,14 @@ function _update()
 end
 
 __gfx__
-00000000011111111111111130300303303003034444444400000000111111111111111160600000000000000000000000000000000000001111111100000000
-000000001ddddddddddddddd03b33b3003b33b3044ffff440eeeee00dddddddddddddddd060008000ccccc00099999000999990000000000dddddddd10000000
-000000001d1111111111111133bbbb3333bbbb334ffffff4eeeeeee011111ddddddd111104408880ccccccc09999999099999990000000001111111d10000000
-000000001d10000000000000bb8bb8bbbb8bb8bbffcffcffeeeeeee0000001ddddd1000040400800ccccccc09999999099999990000000000000001d10000000
-000000001d10000000000000bbbbbbbbbbbbbbbb49ffff94eeeeeee00000001ddd10000000444400ccccccc09999999099999990000000000000001d10000000
-000000001d100000000000003bb88bb33bbbbbb34f7777f4eeeeeee00000001ddd100000004ff400ccccccc09999999099999990000000000000001d10000000
-000000001d100000000000000bb88bb00bbbbbb049777794eeeeeee00000001ddd10000000900900ccccccc09999999099999990000000000000001d10000000
-000000001d1000000000000030bbbb0330bbbb0340ffff040e0e0e000000001ddd100000090000900c0c0c009090909009090900000000000000001d10000000
+00000000011111111111111130300303303003034444444400000000111111111111111160600000606000000000000000000000000000001111111100000000
+000000001ddddddddddddddd03b33b3003b33b3044ffff440eeeee00dddddddddddddddd0600080006000800099999000999990000000000dddddddd10000000
+000000001d1111111111111133bbbb3333bbbb334ffffff4eeeeeee011111ddddddd111104408880044088809999999099999990000000001111111d10000000
+000000001d10000000000000bb8bb8bbbb8bb8bbffcffcffeeeeeee0000001ddddd1000040400800404008009999999099999990000000000000001d10000000
+000000001d10000000000000bbbbbbbbbbbbbbbb49ffff94eeeeeee00000001ddd10000000444400004444009999999099999990000000000000001d10000000
+000000001d100000000000003bb88bb33bbbbbb34f7777f4eeeeeee00000001ddd100000004ff400004ff4009999999099999990000000000000001d10000000
+000000001d100000000000000bb88bb00bbbbbb049777794eeeeeee00000001ddd10000000900900009009009999999099999990000000000000001d10000000
+000000001d1000000000000030bbbb0330bbbb0340ffff040e0e0e000000001ddd10000009000090009009009090909009090900000000000000001d10000000
 00aaa0001d10000000000000000000000000000000000000000000000000001ddd10000000000000000000000000000000000000000000000000001d10000000
 0aaaaa001d10000000000000000000000000000000000000000000000000001ddd10000000000000000000000000000000000000000000000000001d10000000
 aaaaaaa01d10000000001111111111000000000111111111111111000000001ddd10000000011111111111111100000000011111111110000000001d10000000
@@ -952,3 +1023,4 @@ __sfx__
 __music__
 00 01424344
 04 02424344
+
