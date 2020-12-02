@@ -110,18 +110,6 @@ function ghost.new( x, y, name, speed)
     g.state    = g.states.caged
     g.freetime = 400
     g.freefood = 90
-  elseif g.name=="newgerm1" then
-    g.colour   = 8
-    g.state    = g.states.fright
-  elseif g.name=="newgerm2" then
-    g.colour   = 8
-    g.state    = g.states.fright
-   elseif g.name=="newgerm3" then
-    g.colour   = 8
-    g.state    = g.states.fright
-  elseif g.name=="newgerm4" then
-    g.colour   = 8
-    g.state    = g.states.fright
   end
   
   return g
@@ -200,13 +188,12 @@ function collision()
 end
 
 function housecollision()
-  if ((99 - pacman.x) < 0.5) then
-    if (105 - pacman.y  < 0.5) then
-      return true
-    end
-  else
-    return false
+  print(abs(pacman.x))
+   if (abs(pacman.x)  == 0) + (abs(pacman.y)  == 0) then
+     p( "house generated infection"..(g.name))
+     return true
   end
+  return true
 end
 
 
@@ -357,8 +344,7 @@ function _draw()
   rectfill( 0, 0, 128, 128, 0)
   print( score, 44, 44, 2)
   map( 0, 0, 0, 0, 15, 16)
-
-  spr(13, 100, 105) --add house to bottom right
+  spr(13, 0, 0) --add house to bottom right
  
   
   if game.state == states.menu then
@@ -664,8 +650,11 @@ function _update()
   
   h = housecollision()
   if( housecollision()) then
---add a new ghost
-      add( ghosts, ghost.new( 98, 106, "newgerm2", 0.6))
+    --set up 4 more germs
+      add( ghosts, ghost.new( 0, 0, "newgerm1", 0.6))
+      add( ghosts, ghost.new( 0, 0, "newgerm2", 0.6))
+      add( ghosts, ghost.new( 0, 0, "newgerm3", 0.6))
+      add( ghosts, ghost.new( 0, 0, "newgerm4", 0.6))
   end
 
   g = collision()
