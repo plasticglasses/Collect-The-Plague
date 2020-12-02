@@ -440,7 +440,11 @@ function _draw()
       pal()
       spr( g.eyesspr+g.dir, g.x-3, g.y-3)
     else
-      spr( g.sprite + flr(game.playtime/4)%2, g.x-3, g.y-4)
+      if g.dir == _left or g.dir == _down then
+        spr( g.sprite + flr(game.playtime/4)%2, g.x-3, g.y-4, 1, 1, false)
+      elseif g.dir == _right or g.dir == _up then
+        spr( g.sprite + flr(game.playtime/4)%2, g.x-3, g.y-4, 1, 1, true)
+      end
     end
   end
 end
