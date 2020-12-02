@@ -43,9 +43,9 @@ _down=3
 
 states = { menu=1, intro=2,
            playing=3, dying=4,
-           finish=5 }
+           finish=5, story1=5, story2=6, story3=7 }
 
-game    = { speed=1, level=1, state=1}
+game    = { speed=1, level=1, state=5}
 pellets = {}
 juncts  = {}
 pacman  = {}
@@ -55,6 +55,7 @@ timer = {}
 timer.intro  = 120
 timer.fright = 0
 timer.dying  = 0 
+timer.story = 15
 
 score = 0
 
@@ -394,6 +395,32 @@ function _draw()
     return
   end
   
+  if game.state == states.story1 then
+    rectfill( 0, 0, 128, 128, 0)
+    print( "evil antelopes seek to save", 5, 28, 7)
+    print("the world from coronavirus...", 12, 40, 7) 
+    return
+  end
+
+  if game.state == states.story2 then
+    rectfill( 0, 0, 128, 128, 0)
+    print( "evil antelopes seek to save", 5, 28, 7)
+    print("the world from coronavirus...", 12, 40, 7) 
+    print( "you are the master virus,", 5, 64, 7)
+    print( "avoid running into antelopes", 12, 76, 7)
+    print( "at all costs...", 19, 88, 7)
+    return
+  end
+
+  if game.state == states.story3 then
+    rectfill( 0, 0, 128, 128, 0)
+    print( "collect infected subjects", 5, 36, 7)
+    print( "to become stronger.", 12, 48, 7)
+    print( "pass by the house to ", 5, 72, 7)
+    print( "infect more subjects.", 12, 84, 7)
+    return
+  end
+
   -- Hide pellets (for some reason removing them breaks the game)
   -- for d in all(pellets) do
   --   if d.super then
@@ -650,6 +677,37 @@ function update_ap()
 end
 
 function _update()
+
+  if game.state==states.story1 then
+    if btn()>0 then
+      game.state = states.story2
+    end
+    return
+  end
+
+  if game.state==states.story2 then
+    timer.story -= 1
+    if btn()>0 and timer.story<=0 then
+      game.state = states.story3
+      timer.story = 15
+    end
+    return
+  end
+
+  if game.state==states.story3 then
+    timer.story -= 1
+    if btn()>0 and timer.story<=0 then
+      game.state = states.menu
+    end
+    return
+  end
+
+  if game.state==states.menu then
+    if btn()>0 then
+      newgame()
+    end
+    return
+  end
   
   if game.state==states.menu then
     if btn()>0 then
