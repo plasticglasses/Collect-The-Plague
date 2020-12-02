@@ -187,6 +187,15 @@ function collision()
   return false
 end
 
+function housecollision()
+  print(abs(pacman.x))
+   if (abs(pacman.x)  == 0) + (abs(pacman.y)  == 0) then
+     p( "house generated infection"..(g.name))
+     return true
+  end
+  return true
+end
+
 
 function oppdir( d)
   if(d==_left)  return _right
@@ -335,7 +344,8 @@ function _draw()
   rectfill( 0, 0, 128, 128, 0)
   print( score, 44, 44, 2)
   map( 0, 0, 0, 0, 15, 16)
-  spr(13, x, y) --add house to bottom right
+  spr(13, 0, 0) --add house to bottom right
+ 
   
   if game.state == states.menu then
     rectfill( 8, 60, 104, 68, 0)
@@ -638,6 +648,15 @@ function _update()
     end
   end
   
+  h = housecollision()
+  if( housecollision()) then
+    --set up 4 more germs
+      add( ghosts, ghost.new( 0, 0, "newgerm1", 0.6))
+      add( ghosts, ghost.new( 0, 0, "newgerm2", 0.6))
+      add( ghosts, ghost.new( 0, 0, "newgerm3", 0.6))
+      add( ghosts, ghost.new( 0, 0, "newgerm4", 0.6))
+  end
+
   g = collision()
   if( collision()) then
     if g.state == ghost.states.fright then
