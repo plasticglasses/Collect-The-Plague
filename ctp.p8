@@ -217,8 +217,15 @@ end
 
 function housecollision()	
   if ((99 - pacman.x) < 0.5) then	
-    if (105 - pacman.y  < 0.5) then	
-      return true	
+    if (105 - pacman.y  < 0.5) then
+	ghostscounter=	0
+	for g in all(ghosts) do
+	  ghostscounter = ghostscounter + 1
+	end 
+
+	if ghostscounter<30 then
+      	  return true	
+	end
     end	
   else	
     return false	
@@ -689,9 +696,8 @@ function _update()
       end
     end
   end
-
-  h = housecollision()	
-  if( housecollision()) then	
+	
+  if( housecollision() )then	
 --add a new ghost	
     add( ghosts, ghost.new( 98, 106, "newgerm2", 0.6, ghost.types.virus))	
   end
