@@ -55,7 +55,7 @@ timer = {}
 timer.intro  = 120
 timer.fright = 0
 timer.dying  = 0 
-timer.story = 15
+timer.story = 10
 
 score = 0
 
@@ -438,11 +438,6 @@ function _draw()
     pacman.drawsprite = pacman.sprite
   end
   
-  pal(1,10)
-  pal(2,10)
-  pal(3,10)
-  pal(4,10)
-  palt(pacman.dir+1,true)
   spr( pacman.drawsprite, pacman.x-3, pacman.y-4)
   pal()
   palt()
@@ -689,7 +684,7 @@ function _update()
     timer.story -= 1
     if btn()>0 and timer.story<=0 then
       game.state = states.story3
-      timer.story = 15
+      timer.story = 10
     end
     return
   end
@@ -698,12 +693,14 @@ function _update()
     timer.story -= 1
     if btn()>0 and timer.story<=0 then
       game.state = states.menu
+      timer.story = 10
     end
     return
   end
 
   if game.state==states.menu then
-    if btn()>0 then
+    timer.story -= 1
+    if btn()>0 and timer.story<=0 then
       newgame()
     end
     return
